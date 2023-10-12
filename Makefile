@@ -3,7 +3,7 @@
 build:clean-build clean-out
 	mkdir build
 	mkdir out
-	cd ./build; gcc ../src/main.c ../src/create_processe.c -o main;	gcc ../src/child.c ../src/create_processe.c -o child
+	cd ./build; gcc ../main.c ./src/generating_cards.c -o main;
 
 run:
 	cd ./out; ../build/main

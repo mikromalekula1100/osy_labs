@@ -20,17 +20,14 @@ long sum2 = 0;
 // }
 
 int main() {
-     struct timeval start_time, end_time;
+    struct timeval start_time, end_time;
     long seconds, microseconds;
     double elapsed_time;
     gettimeofday(&start_time, NULL); 
 
-    const int threadCount = 1;
-    pthread_mutex_init(&mutex, NULL);
-    pthread_t tid[threadCount];
 
-    for(int i = 0; i < 1000000000; ++i){
-        int value1, value2;
+    for(int i = 0; i < 80000000; ++i){
+    int value1, value2;
     value1 = rand() % 54 + 1;
     while((value2 = (rand() % 54 + 1)) == value1){continue;}
     if(abs(value1 - value2) == 1) sum1 ++;
@@ -38,7 +35,7 @@ int main() {
     }
     
     
-    printf("%d %d \n", sum1, sum2);
+    printf("%ld %ld \n", sum1, sum2);
 
     gettimeofday(&end_time, NULL); 
     seconds = end_time.tv_sec - start_time.tv_sec;
