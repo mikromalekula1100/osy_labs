@@ -1,4 +1,4 @@
-#include "generating_cards.h"
+#include "./include/generating_cards.h"
 
 
 
@@ -15,7 +15,7 @@ int main() {
     for (int i=0; i<threadCount; i++)
     {   
         idpthread[i] = i+1;
-        pthread_create(&tid[i], NULL, increment_function_plus_200, (void*)&idpthread[i]);
+        pthread_create(&tid[i], NULL, generating_cards, (void*)&idpthread[i]);
     }
 
     for (int i=0; i<threadCount; i++)
