@@ -1,103 +1,49 @@
-#include "../include/create_processe.h"
+#include <stdio.h>
+#include <pthread.h>
+#include <stdlib.h> //для рандома
+#include <sys/time.h>
+#include <math.h>
 
+
+pthread_mutex_t mutex;
+long sum1 = 0;
+long sum2 = 0;
+
+// void* increment_function_plus_200(void *args) {
+//     for (int i=0; i<100; i++)
+//     {
+//         pthread_mutex_lock(&mutex);
+//         sum = sum + 2;
+//         pthread_mutex_unlock(&mutex);
+//     }
+//     pthread_exit(0);
+// }
 
 int main() {
-    const int max_buffer_size = 50;
+     struct timeval start_time, end_time;
+    long seconds, microseconds;
+    double elapsed_time;
+    gettimeofday(&start_time, NULL); 
 
-    printf("Введите названия файлов.\n");
+    const int threadCount = 1;
+    pthread_mutex_init(&mutex, NULL);
+    pthread_t tid[threadCount];
 
-    char file_name_first[max_buffer_size];
-    
-    scanf("%s", file_name_first);
-
-    int first_file_descriptior = open(file_name_first,  O_CREAT | O_WRONLY, S_IRWXU);
-    
-    if(first_file_descriptior == -1){
-
-        perror("Opening file number 1");
-        return -1;  
-    }
-
-    int pipe_fisrt[2];
-    int first_error = pipe(pipe_fisrt);
-
-    if(first_error == -1){
-        
-        perror("Creature a pipe 1");
-        return -1;
-    }
-
-    pid_t proccess_id = create_processe();
-    
-    if(proccess_id == 0){
-
-        close(pipe_fisrt[1]);
-
-        dup2(pipe_fisrt[0], STDIN_FILENO);
-        dup2(first_file_descriptior, STDOUT_FILENO);
-
-        execl("../build/child", " ", NULL);
-        perror("Execl in child 1");
-        return -1;
+    for(int i = 0; i < 1000000000; ++i){
+        int value1, value2;
+    value1 = rand() % 54 + 1;
+    while((value2 = (rand() % 54 + 1)) == value1){continue;}
+    if(abs(value1 - value2) == 1) sum1 ++;
+    else sum2 ++;
     }
     
-    char file_name2[max_buffer_size];
-
-    scanf("%s", file_name2);
-
-    int second_file_descriptior = open(file_name2,  O_CREAT | O_WRONLY, S_IRWXU);
-
-    if(second_file_descriptior == -1){
-
-        perror("Opening file number 2"); 
-        return -1;
-    }
-
-    close(pipe_fisrt[0]);
-
-    int pipe_second[2];
-    int second_error = pipe(pipe_second);
-
-    if(second_error == -1){
-
-        perror("Creature a pipe 2");
-        return -1;
-    }
-
-    proccess_id = create_processe();
-
-    if(proccess_id == 0){
-
-        close(pipe_second[1]);
-
-        dup2(pipe_second[0], STDIN_FILENO);
-        dup2(second_file_descriptior, STDOUT_FILENO);
-
-        execl("../build/child", " ", NULL);
-        perror("Execl in child2");
-        return -1;
-    }
-
-    close(pipe_second[0]);
-
-    char string [max_buffer_size];
     
-    int count;
+    printf("%d %d \n", sum1, sum2);
 
-    while((count = read(0, string, max_buffer_size))>0){
-        
-        if(count > 11){
-
-            write(pipe_second[1], string, count); 
-        }
-        else{
-
-            write(pipe_fisrt[1], string, count);
-        }
-
-    }
-
-    close(first_file_descriptior);
-    close(second_file_descriptior);
+    gettimeofday(&end_time, NULL); 
+    seconds = end_time.tv_sec - start_time.tv_sec;
+    microseconds = end_time.tv_usec - start_time.tv_usec;
+    elapsed_time = seconds + (microseconds / 1000000.0);
+    printf("Время выполнения программы: %f секунд\n", elapsed_time);
     return 0;
 }
