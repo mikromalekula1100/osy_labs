@@ -4,8 +4,13 @@
 #include <sys/time.h>
 #include <math.h>
 
-pthread_mutex_t mutex;
-int sum1 = 0;
-int sum2 = 0;
+
 
 void* generating_cards(void* args);
+
+struct Data
+    {   
+        pthread_mutex_t mutex;
+        long round_count;
+        long sum[2];
+    };

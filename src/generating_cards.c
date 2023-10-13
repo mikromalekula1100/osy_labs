@@ -1,29 +1,35 @@
 #include "../include/generating_cards.h"
 
+const int count_cards = 52;
 void* generating_cards(void* args) {
+    
+    printf("%ld \n", (*((struct Data*)(args))).round_count);
+    
 
-    pthread_mutex_lock(&mutex);
+    long round_count = (*((struct Data*)(args))).round_count;
+
+    pthread_mutex_lock(&(*((struct Data*)(args))).mutex);
     unsigned int seed = time(NULL);
-    pthread_mutex_unlock(&mutex);
+    pthread_mutex_unlock(&(*((struct Data*)(args))).mutex);
 
-    int value1, value2, Sum1 = 0, Sum2 = 0;
-    int number = *((int*)args);
-    printf("Я поток номер %d\n", number);
-    for (int i=0; i<10000000; i++)
+    long first_value, second_value, number_matches = 0, number_failures = 0;
+
+    for (long i = 0; i < round_count; i++)
     {   
-        value1 = rand_r(&seed) % 54 + 1;
-        while((value2 = (rand_r(&seed) % 54 + 1)) == value1){continue;}
+        first_value = rand_r(&seed) % count_cards + 1;
+        while((second_value = (rand_r(&seed) % count_cards + 1)) == first_value){continue;}
         
-        if(abs(value1 - value2) == 1){
-            Sum1++;
+        if((abs(first_value - second_value) == 1) && ((first_value / 4) == (second_value / 4))){
+            number_matches++;
         } 
         else{
-            Sum2++;
+            number_failures++;
         } 
     }
-    pthread_mutex_lock(&mutex);
-            sum2 += Sum2;
-            sum1 += Sum1;
-    pthread_mutex_unlock(&mutex);
+    pthread_mutex_lock(&(*((struct Data*)(args))).mutex);
+            (*((struct Data*)(args))).sum[1] += number_failures;
+            (*((struct Data*)(args))).sum[0] += number_matches;
+    pthread_mutex_unlock(&(*((struct Data*)(args))).mutex);
+    
     pthread_exit(0);
 }

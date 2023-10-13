@@ -58,6 +58,11 @@
         "thread": "cpp",
         "pthread.h": "c",
         "math.h": "c",
-        "time.h": "c"
+        "time.h": "c",
+        "generating_cards.h": "c",
+        "valarray": "c",
+        "ranges": "c",
+        "span": "c",
+        "shared_mutex": "c"
     }
 }
