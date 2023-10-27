@@ -27,9 +27,9 @@ int main() {
         return -1;
     }
 
-    pid_t proccess_id = create_processe();
+    pid_t proccess_id_first = create_processe();
     
-    if(proccess_id == 0){
+    if(proccess_id_first == 0){
 
         close(pipe_fisrt[1]);
 
@@ -64,9 +64,9 @@ int main() {
         return -1;
     }
 
-    proccess_id = create_processe();
+    pid_t proccess_id_second = create_processe();
 
-    if(proccess_id == 0){
+    if(proccess_id_second == 0){
 
         close(pipe_second[1]);
 
