@@ -2,15 +2,18 @@
 
 
 int main() {
-    const int max_buffer_size = 50;
+    const int max_buffer_size = 128;
 
     printf("Введите названия файлов.\n");
 
-    char file_name_first[max_buffer_size];
+    char file_name[max_buffer_size];
     
-    scanf("%s", file_name_first);
+    scanf("%s", file_name);
 
-    int first_file_descriptior = open(file_name_first,  O_CREAT | O_WRONLY, S_IRWXU);
+    char semafor_name_third[] = "/semafor3";
+    sem_t* third_semafor =  sem_open(semafor_name_third, O_CREAT, S_IRWXU, 0);
+
+    int first_file_descriptior = open(file_name,  O_CREAT | O_RDWR, S_IRWXU);
     
     if(first_file_descriptior == -1){
 
@@ -18,34 +21,30 @@ int main() {
         return -1;  
     }
 
-    int pipe_fisrt[2];
-    int first_error = pipe(pipe_fisrt);
+    char semafor_name_first[] = "/semafor1";
+    sem_t* first_semafor =  sem_open(semafor_name_first, O_CREAT, S_IRWXU, 0);
 
-    if(first_error == -1){
-        
-        perror("Creature a pipe 1");
+    int mmap_file_descriptior = open("mmap_file.txt", O_CREAT | O_RDWR, S_IRWXU);
+
+    if (mmap_file_descriptior == -1) {
+        perror("open mmap_file_descriptior");
         return -1;
-    }
-
-    pid_t proccess_id_first = create_processe();
+        }
+    pid_t child_pid_first = create_processe();
     
-    if(proccess_id_first == 0){
+    if(child_pid_first == 0){
 
-        close(pipe_fisrt[1]);
-
-        dup2(pipe_fisrt[0], STDIN_FILENO);
+        dup2(mmap_file_descriptior, STDIN_FILENO);
         dup2(first_file_descriptior, STDOUT_FILENO);
 
-        execl("../build/child", " ", NULL);
+        execl("../build/child", " ", semafor_name_first, semafor_name_third, NULL);
         perror("Execl in child 1");
         return -1;
     }
     
-    char file_name2[max_buffer_size];
+    scanf("%s", file_name);
 
-    scanf("%s", file_name2);
-
-    int second_file_descriptior = open(file_name2,  O_CREAT | O_WRONLY, S_IRWXU);
+    int second_file_descriptior = open(file_name,  O_CREAT | O_RDWR, S_IRWXU);
 
     if(second_file_descriptior == -1){
 
@@ -53,50 +52,61 @@ int main() {
         return -1;
     }
 
-    close(pipe_fisrt[0]);
+    char semafor_name_second[] = "/semafor2";
+    sem_t* second_semafor =  sem_open(semafor_name_second, O_CREAT, S_IRWXU, 0);
 
-    int pipe_second[2];
-    int second_error = pipe(pipe_second);
+    pid_t child_pid_second = create_processe();
 
-    if(second_error == -1){
+    if(child_pid_second == 0){
 
-        perror("Creature a pipe 2");
-        return -1;
-    }
-
-    pid_t proccess_id_second = create_processe();
-
-    if(proccess_id_second == 0){
-
-        close(pipe_second[1]);
-
-        dup2(pipe_second[0], STDIN_FILENO);
+        dup2(mmap_file_descriptior, STDIN_FILENO);
         dup2(second_file_descriptior, STDOUT_FILENO);
 
-        execl("../build/child", " ", NULL);
+        execl("../build/child", " ", semafor_name_second, semafor_name_third, NULL);
         perror("Execl in child2");
         return -1;
     }
-
-    close(pipe_second[0]);
 
     char string [max_buffer_size];
     
     int count;
 
-    while((count = read(0, string, max_buffer_size))>0){
-        
-        if(count > 11){
+    while((count = read(0, string, max_buffer_size)) > 0){
 
-            write(pipe_second[1], string, count); 
+        if (ftruncate(mmap_file_descriptior, count) == -1) {
+            perror("Could not set size of mfile.txt");
+            return 1;
+            }
+
+        char* mp = mmap(NULL, count, PROT_WRITE, MAP_SHARED, mmap_file_descriptior, 0);
+        if (mp == MAP_FAILED) {
+            perror("mmap");
+            return -1;
+            }
+            
+        for(int i = 0; i < count; ++i){
+            mp[i] = string[i];
+        }
+
+        if(count > 11){ 
+            sem_post(second_semafor);
         }
         else{
-
-            write(pipe_fisrt[1], string, count);
+            sem_post(first_semafor);
         }
-
+        
+        munmap(mp, count);
+        sem_wait(third_semafor);
     }
-
+    if (kill(child_pid_first, SIGTERM) == -1) {
+        perror("Ошибка при отправке сигнала");
+    }
+    if (kill(child_pid_second, SIGTERM) == -1) {
+        perror("Ошибка при отправке сигнала");
+    }
+    sem_unlink(semafor_name_first);
+    sem_unlink(semafor_name_second);
+    sem_unlink(semafor_name_third);
     close(first_file_descriptior);
     close(second_file_descriptior);
     return 0;

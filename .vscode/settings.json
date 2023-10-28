@@ -21,6 +21,8 @@
         "sstream": "c",
         "regex": "c",
         "bitset": "c",
-        "thread": "c"
+        "thread": "c",
+        "source_location": "c",
+        "string": "c"
     }
 }

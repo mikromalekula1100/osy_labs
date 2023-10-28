@@ -11,19 +11,54 @@ void reverse_string(char* string, int size_string){
     }
 }
 
-int main(){
-    const int max_buffer_size = 50;
-
-    char string[50];
-
-    int count;
-
-    while((count = read(STDIN_FILENO, string, 50))>0){
-
-        reverse_string(string, count-1);
-        write(STDOUT_FILENO, string, count);
-    }
+void handle_sigterm() 
+{
     close(STDOUT_FILENO);
     close(STDIN_FILENO);
-    return 0;
+    exit(0);
+}
+int main(int argc, char *argv[]){
+    sem_t* first_semafor =  sem_open(argv[1], 0);
+    sem_t* parent_semafor =  sem_open(argv[2], 0);
+
+    const int max_buffer_size = 128;
+
+    char string[max_buffer_size];
+
+
+    struct stat sd;
+
+    
+
+    while(1){
+
+        if (signal(SIGTERM, handle_sigterm) == SIG_ERR) {
+            perror("Error while setting a signal handler");
+            return EXIT_FAILURE;
+        }
+        
+        sem_wait(first_semafor);
+
+        if(fstat(STDIN_FILENO, &sd) == -1){
+            perror("could not get file size. \n");
+        }
+
+        char* mp = mmap(NULL, sd.st_size, PROT_READ, MAP_SHARED, STDIN_FILENO, 0);
+        for(int i = 0; i < sd.st_size; ++i){
+            string[i] = mp[i];
+        }
+        munmap(mp, sd.st_size);
+
+        reverse_string(string, sd.st_size - 1);
+
+        if(write(STDOUT_FILENO, string, sd.st_size) == -1){
+            perror("write");
+        }
+        
+
+        sem_post(parent_semafor);
+        
+    }
+    
+    
 }
