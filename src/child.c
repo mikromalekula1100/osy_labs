@@ -1,6 +1,5 @@
 #include "../include/create_processe.h"
 
-
 void reverse_string(char* string, int size_string){
 
     for(int i = 0; i < (size_string/2); ++i){
@@ -25,10 +24,7 @@ int main(int argc, char *argv[]){
 
     char string[max_buffer_size];
 
-
     struct stat sd;
-
-    
 
     while(1){
 
@@ -36,7 +32,7 @@ int main(int argc, char *argv[]){
             perror("Error while setting a signal handler");
             return EXIT_FAILURE;
         }
-        
+
         sem_wait(first_semafor);
 
         if(fstat(STDIN_FILENO, &sd) == -1){
@@ -54,8 +50,7 @@ int main(int argc, char *argv[]){
         if(write(STDOUT_FILENO, string, sd.st_size) == -1){
             perror("write");
         }
-        
-
+    
         sem_post(parent_semafor);
         
     }
