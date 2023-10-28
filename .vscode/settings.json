@@ -6,6 +6,21 @@
         "typeinfo": "c",
         "stdlib.h": "c",
         "wait.h": "c",
-        "create_processe.h": "c"
+        "create_processe.h": "c",
+        "*.tcc": "c",
+        "barrier": "c",
+        "chrono": "c",
+        "random": "c",
+        "latch": "c",
+        "limits": "c",
+        "semaphore": "c",
+        "valarray": "c",
+        "algorithm": "c",
+        "list": "c",
+        "fstream": "c",
+        "sstream": "c",
+        "regex": "c",
+        "bitset": "c",
+        "thread": "c"
     }
 }
