@@ -6,6 +6,8 @@
         "typeinfo": "c",
         "stdlib.h": "c",
         "wait.h": "c",
-        "create_processe.h": "c"
+        "create_processe.h": "c",
+        "string": "c",
+        "*.tcc": "c"
     }
 }

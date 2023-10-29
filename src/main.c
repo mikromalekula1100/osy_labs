@@ -19,6 +19,7 @@ int main() {
     }
 
     int pipe_fisrt[2];
+
     int first_error = pipe(pipe_fisrt);
 
     if(first_error == -1){
@@ -79,6 +80,11 @@ int main() {
     }
 
     close(pipe_second[0]);
+
+// -----
+
+
+
 
     char string [max_buffer_size];
     
