@@ -24,12 +24,14 @@ int main() {
     char semafor_name_first[] = "/semafor1";
     sem_t* first_semafor =  sem_open(semafor_name_first, O_CREAT, S_IRWXU, 0);
 
-    int mmap_file_descriptior = open("mmap_file.txt", O_CREAT | O_RDWR, S_IRWXU);
+    char mmap_file_name[] = "/mmap_file";
+    int mmap_file_descriptior = shm_open(mmap_file_name, O_CREAT | O_RDWR, S_IRWXU);
 
     if (mmap_file_descriptior == -1) {
         perror("open mmap_file_descriptior");
         return -1;
         }
+
     pid_t child_pid_first = create_processe();
     
     if(child_pid_first == 0){
@@ -79,11 +81,10 @@ int main() {
             }
 
         char* mp = mmap(NULL, count, PROT_WRITE, MAP_SHARED, mmap_file_descriptior, 0);
-        if (mp == MAP_FAILED) {
+            if (mp == MAP_FAILED) {
             perror("mmap");
             return -1;
-            }
-            
+            }   
         for(int i = 0; i < count; ++i){
             mp[i] = string[i];
         }
@@ -95,7 +96,6 @@ int main() {
             sem_post(first_semafor);
         }
         
-        munmap(mp, count);
         sem_wait(third_semafor);
     }
     if (kill(child_pid_first, SIGTERM) == -1) {
@@ -104,9 +104,17 @@ int main() {
     if (kill(child_pid_second, SIGTERM) == -1) {
         perror("Ошибка при отправке сигнала");
     }
+
+    unlink(mmap_file_name);
+
+    sem_close(first_semafor);
+    sem_close(second_semafor);
+    sem_close(third_semafor);
+
     sem_unlink(semafor_name_first);
     sem_unlink(semafor_name_second);
     sem_unlink(semafor_name_third);
+    
     close(first_file_descriptior);
     close(second_file_descriptior);
     return 0;
