@@ -1,6 +1,8 @@
 #include "../include/create_processe.h"
-#include "../include/child.h"
+#include "../include/constants.h"
 
+
+sem_t* child_list_semafor[2];
 
 void reverse_string(char* string, int size_string){
 
@@ -13,25 +15,22 @@ void reverse_string(char* string, int size_string){
 }
 
 void handle_sigterm() 
-{
-    close(STDOUT_FILENO);
-    close(STDIN_FILENO);
-    sem_close(first_semafor);
-    sem_close(parent_semafor);
+{   
+    for(int i = 0; i < count_processes; ++i){
+        close(i);
+        sem_close(child_list_semafor[i]);
+    }
     exit(0);
 }
 
 int main(int argc, char *argv[]){
-    first_semafor =  sem_open(argv[1], 0);
-    parent_semafor =  sem_open(argv[2], 0);
 
-    const int max_buffer_size = 128;
+    for(int i = 0; i < count_processes; ++i)
+        child_list_semafor[i] =  sem_open(argv[i+1], 0);
 
     char string[max_buffer_size];
 
     struct stat sd;
-
-    
 
     while(1){
 
@@ -40,7 +39,7 @@ int main(int argc, char *argv[]){
             return EXIT_FAILURE;
         }
 
-        sem_wait(first_semafor);
+        sem_wait(child_list_semafor[0]);
 
         if(fstat(STDIN_FILENO, &sd) == -1){
             perror("could not get file size. \n");
@@ -58,7 +57,7 @@ int main(int argc, char *argv[]){
             perror("write");
         }
     
-        sem_post(parent_semafor);
+        sem_post(child_list_semafor[1]);
         
     }
     

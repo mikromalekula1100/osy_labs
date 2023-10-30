@@ -23,6 +23,7 @@
         "bitset": "c",
         "thread": "c",
         "source_location": "c",
-        "string": "c"
+        "string": "c",
+        "constants.h": "c"
     }
 }
