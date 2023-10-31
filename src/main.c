@@ -1,103 +1,103 @@
-#include "../include/create_processe.h"
-
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 int main() {
-    const int max_buffer_size = 50;
+    const int max_size_buff = 1024;
+    pid_t child1, child2;
 
-    printf("Введите названия файлов.\n");
+    int pipe1[2];
+    int pipe2[2];
 
-    char file_name_first[max_buffer_size];
-    
-    scanf("%s", file_name_first);
-
-    int first_file_descriptior = open(file_name_first,  O_CREAT | O_WRONLY, S_IRWXU);
-    
-    if(first_file_descriptior == -1){
-
-        perror("Opening file number 1");
-        return -1;  
+    if (pipe(pipe1) == -1 || pipe(pipe2) == -1) {
+        perror("pipe");
+        exit(EXIT_FAILURE);
     }
 
-    int pipe_fisrt[2];
-    int first_error = pipe(pipe_fisrt);
+    child1 = fork();
 
-    if(first_error == -1){
+    if (child1 == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+    
+
+    if (child1 == 0) {
         
-        perror("Creature a pipe 1");
-        return -1;
-    }
-
-    pid_t proccess_id = create_processe();
-    
-    if(proccess_id == 0){
-
-        close(pipe_fisrt[1]);
-
-        dup2(pipe_fisrt[0], STDIN_FILENO);
-        dup2(first_file_descriptior, STDOUT_FILENO);
-
-        execl("../build/child", " ", NULL);
-        perror("Execl in child 1");
-        return -1;
-    }
-    
-    char file_name2[max_buffer_size];
-
-    scanf("%s", file_name2);
-
-    int second_file_descriptior = open(file_name2,  O_CREAT | O_WRONLY, S_IRWXU);
-
-    if(second_file_descriptior == -1){
-
-        perror("Opening file number 2"); 
-        return -1;
-    }
-
-    close(pipe_fisrt[0]);
-
-    int pipe_second[2];
-    int second_error = pipe(pipe_second);
-
-    if(second_error == -1){
-
-        perror("Creature a pipe 2");
-        return -1;
-    }
-
-    proccess_id = create_processe();
-
-    if(proccess_id == 0){
-
-        close(pipe_second[1]);
-
-        dup2(pipe_second[0], STDIN_FILENO);
-        dup2(second_file_descriptior, STDOUT_FILENO);
-
-        execl("../build/child", " ", NULL);
-        perror("Execl in child2");
-        return -1;
-    }
-
-    close(pipe_second[0]);
-
-    char string [max_buffer_size];
-    
-    int count;
-
-    while((count = read(0, string, max_buffer_size))>0){
+        close(pipe1[1]); 
+        close(pipe2[0]);  
         
-        if(count > 11){
+        dup2(pipe1[0], 0);
+        dup2(pipe2[1], 1);
 
-            write(pipe_second[1], string, count); 
-        }
-        else{
+        execl("../build/child1", " ", NULL);
 
-            write(pipe_fisrt[1], string, count);
-        }
-
+        perror("child1");
+        return -1;
     }
 
-    close(first_file_descriptior);
-    close(second_file_descriptior);
+    int pipe3[2];
+    if (pipe(pipe3) == -1) {
+        perror("pipe");
+        exit(EXIT_FAILURE);
+    }
+
+    child2 = fork();
+    if (child2 == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+    if (child2 == 0) {
+        close(pipe1[1]);
+        close(pipe1[0]);
+
+        close(pipe2[1]);
+        close(pipe3[0]);  
+
+        dup2(pipe2[0], 0);
+        dup2(pipe3[1], 1);
+        execl("../build/child2", " ", NULL);
+        
+        perror("child2");
+        return -1;
+        
+    }
+
+    close(pipe1[0]);
+    char input_buffer[max_size_buff];
+
+    char kek[20] = "Enter a string: \n";
+ 
+    write(1, kek, 20);
+
+    int size;
+    while((size = read(0, input_buffer, max_size_buff)) > 0){   
+        write(pipe1[1], input_buffer, size);
+    }
+    close(pipe1[1]);
+    
+    char result_buffer[max_size_buff];
+    ssize_t n;
+
+    close(pipe3[1]);
+    close(pipe2[1]); 
+   
+    char result[20] = "Result: \n";
+    write(1, result, 20);
+    while((n = read(pipe3[0], result_buffer, sizeof(result_buffer))) > 0){
+        write(1, result_buffer, n);
+    }
+    
+    close(pipe2[0]);
+    
+    close(pipe3[0]);
+   
+
     return 0;
 }

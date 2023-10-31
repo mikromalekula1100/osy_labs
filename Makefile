@@ -2,11 +2,10 @@
 
 build:clean-build clean-out
 	mkdir build
-	mkdir out
-	cd ./build; gcc ../src/main.c ../src/create_processe.c -o main;	gcc ../src/child.c ../src/create_processe.c -o child
+	cd ./build; gcc ../src/main.c -o main;	gcc ../src/child1.c -o child1; gcc ../src/child2.c -o child2
 
 run:
-	cd ./out; ../build/main
+	cd build; ./main
 
 clean-build:
 	rm -rf ./build/
