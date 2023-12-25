@@ -2,7 +2,8 @@
 #include <string>
 #include "zmq.hpp"
 #include <thread>
-
+#include <vector>
+#include <mmap>
 
 using std::endl;
 using std::cout;
@@ -32,6 +33,8 @@ void reading(){
 }
 
 int main (){
+    std::mmap<int, pid_t> nodes;
+    std::vector
     zmq::context_t ctx;
     zmq::socket_t reqPush(ctx, ZMQ_PUSH);
     const std::string addrPush = "tcp://127.0.0.1:4040";
@@ -41,13 +44,31 @@ int main (){
 
     
     while(true){
-        std::string command;
-        while();
-        
-        
-        if(com == "create"){
+        std::string input;
+        std::getline(std::cin, input);
 
+        std::istringstream iss(input);
+        std::vector<std::string> words;
+        std::string word;
+        while (iss >> word) {
+            words.push_back(word);
         }
+        
+        
+        if(words[0] == "create"){
+            int idNode = std::stoi(words[1]);
+            int idParent = std::stoi(words[2]);
+            if(!nodes.find(idNode)){
+
+            }
+            cout<<"Error: Already exists"<<endl;
+        }
+        // else if(){
+
+        // }
+        // else{
+
+        // }
         zmq::message_t msg(&value, sizeof(value));
         reqPush.send(msg, zmq::send_flags::none);
         cout<<"я клиент и я отправил число "<<value<<endl;  

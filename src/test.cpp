@@ -3,7 +3,7 @@
 #include <string>
 #include <cstring>
 #include <vector>
-
+#include <sstream>
 using std::endl;
 using std::cout;
 using std::cin;
@@ -11,17 +11,15 @@ using std::cin;
 
 
 int main(){
-    std::string command;
-    cin>>command;
-    std::vector<std::string> enumCommand;
-    std::vector<int> count;
-    count.push_back(0);
-    cout<<command.size()<<endl;
-    for(size_t i = 0; i < command.size(); ++i){
-        if(command[i] == 'a'){
-            cout<<1<<endl;
-        }
-        
+    std::string input;
+    std::getline(std::cin, input);
+
+    std::istringstream iss(input);
+    std::vector<std::string> words;
+    std::string word;
+    while (iss >> word) {
+        words.push_back(word);
     }
-    cout<<enumCommand.size()<<endl;
+    
+
 }
