@@ -3,9 +3,11 @@
 #include "zmq.hpp"
 #include <thread>
 
+
 using std::endl;
 using std::cout;
 using std::cin;
+
 
 //один поток будет считывать с консоли и отправлять на обработку, а второй - принимать результат и выводить его в консоль
 
@@ -39,8 +41,13 @@ int main (){
 
     
     while(true){
-        int value;
-        cin>>value;
+        std::string command;
+        while();
+        
+        
+        if(com == "create"){
+
+        }
         zmq::message_t msg(&value, sizeof(value));
         reqPush.send(msg, zmq::send_flags::none);
         cout<<"я клиент и я отправил число "<<value<<endl;  
