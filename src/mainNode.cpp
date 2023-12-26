@@ -3,7 +3,7 @@
 #include "zmq.hpp"
 #include <thread>
 #include <vector>
-#include <mmap>
+#include <map>
 
 using std::endl;
 using std::cout;
@@ -33,7 +33,7 @@ void reading(){
 }
 
 int main (){
-    std::mmap<int, pid_t> nodes;
+    std::map<int, pid_t> nodes;
     std::vector
     zmq::context_t ctx;
     zmq::socket_t reqPush(ctx, ZMQ_PUSH);
