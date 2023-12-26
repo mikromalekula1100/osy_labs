@@ -65,7 +65,9 @@ int main (){
                 if(!nodes.find(idNode)){
                     pid_t pidId = create_processe();
                     if(!pidId){
-                        
+                        execl("../build/jobNode", " ", NULL);
+                        perror("Execl in child");
+                        return -1;
                     }
                     nodes[idNode] = 
                 }
