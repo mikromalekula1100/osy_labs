@@ -5,6 +5,8 @@
 #include <vector>
 #include <map>
 
+#include "../include/create_processe.h"
+
 using std::endl;
 using std::cout;
 using std::cin;
@@ -37,9 +39,9 @@ int main (){
     std::map<int, pid_t> nodes;
 
     zmq::context_t ctx;
-    zmq::socket_t reqPush(ctx, ZMQ_PUSH);
+    zmq::socket_t reqPub(ctx, ZMQ_PUB);
     const std::string addrPush = "tcp://127.0.0.1:4040";
-    reqPush.bind(addrPush); 
+    reqPub.bind(addrPush); 
 
     std::thread newThread(reading);
 
@@ -59,12 +61,23 @@ int main (){
         if(words[0] == "create"){
             int idNode = std::stoi(words[1]);
             int idParent = std::stoi(words[2]);
-            if(!nodes.find(idNode)){
-                for(auto i : nodes){
-                    i.second
+            if(idParent == -1){
+                if(!nodes.find(idNode)){
+                    pid_t pidId = create_processe();
+                    if(!pidId){
+                        
+                    }
+                    nodes[idNode] = 
                 }
             }
-            cout<<"Error: Already exists"<<endl;
+            // int idNode = std::stoi(words[1]);
+            // int idParent = std::stoi(words[2]);
+            // if(!nodes.find(idNode)){
+            //     for(auto i : nodes){
+            //         i.second
+            //     }
+            // }
+            // cout<<"Error: Already exists"<<endl;
         }
         // else if(){
 
@@ -73,7 +86,7 @@ int main (){
 
         // }
         zmq::message_t msg(&value, sizeof(value));
-        reqPush.send(msg, zmq::send_flags::none);
+        reqPub.send(msg, zmq::send_flags::none);
         cout<<"я клиент и я отправил число "<<value<<endl;  
  
             
