@@ -4,9 +4,10 @@
 #include <unistd.h>
 #include <thread>
 #include <zmq.h>
+
 using std::endl;
 using std::cout;
-
+//один поток принимает сообщения от предыдущих узлов
 
 void calculate(zmq::context_t& ctx){
     zmq::socket_t socket(ctx, ZMQ_PAIR);
@@ -56,19 +57,17 @@ int main(){
             socket.send(to_send, zmq::send_flags::none); 
         }
 
-        try{
+        
                       
-            auto result2 = socket.recv(answer, zmq::recv_flags::dontwait);
+        auto result2 = socket.recv(answer, zmq::recv_flags::dontwait);
 
-            if(result2.has_value() && result2.value() > 0){
+        if(result2.has_value() && result2.value() > 0){
 
-                respondPush.send(std::move(answer), zmq::send_flags::none);
-            }
+            respondPush.send(std::move(answer), zmq::send_flags::none);
+        }
 
-            }
-            catch(...){
-                continue;                 
-            }
+           
+            
         
     }
 

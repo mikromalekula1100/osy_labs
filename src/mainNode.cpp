@@ -12,6 +12,7 @@ using std::cin;
 
 //один поток будет считывать с консоли и отправлять на обработку, а второй - принимать результат и выводить его в консоль
 
+//в управляющем узле будет один сокет PUB чтобы отсылать всем узлам запросы, а также сокет типа PULL в отдельном процессе для приёма срезультатов от выполняющих узлов
 void reading(){
     zmq::context_t ctx;
     zmq::socket_t reqPull(ctx, ZMQ_PULL);
@@ -34,7 +35,7 @@ void reading(){
 
 int main (){
     std::map<int, pid_t> nodes;
-    std::vector
+
     zmq::context_t ctx;
     zmq::socket_t reqPush(ctx, ZMQ_PUSH);
     const std::string addrPush = "tcp://127.0.0.1:4040";
@@ -44,9 +45,9 @@ int main (){
 
     
     while(true){
+
         std::string input;
         std::getline(std::cin, input);
-
         std::istringstream iss(input);
         std::vector<std::string> words;
         std::string word;
@@ -59,7 +60,9 @@ int main (){
             int idNode = std::stoi(words[1]);
             int idParent = std::stoi(words[2]);
             if(!nodes.find(idNode)){
-
+                for(auto i : nodes){
+                    i.second
+                }
             }
             cout<<"Error: Already exists"<<endl;
         }
