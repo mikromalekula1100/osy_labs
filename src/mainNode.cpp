@@ -89,6 +89,12 @@ int main (){
                     cout<<"Ok: "<<pidId<<endl;
 
                 }
+                else if(!nodes.count(idParent)){
+                    
+                    cout<<"Error: Parent not found"<<endl;
+                    continue;
+                
+                }
 
                 zmq::message_t command(&str[0], str.size());
 
@@ -107,7 +113,7 @@ int main (){
         }
 
         else if(words[0] == "exec"){
-
+            
         }
             
     }
