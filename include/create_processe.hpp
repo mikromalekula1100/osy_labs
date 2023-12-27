@@ -1,5 +1,4 @@
-#ifndef SUM_H
-#define SUM_H
+#pragma once
 
 #include "stdio.h"
 #include "stdlib.h"
@@ -8,5 +7,3 @@
 #include "sys/wait.h"
 
 int create_processe();
-
-#endif

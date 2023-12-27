@@ -12,8 +12,8 @@ using std::cin;
 
 
 int main(){
-    std::map<int, std::string> kek = {{1, "sds"}, {21, "dsdsd"}};
-    for(auto i : kek){
-        cout<<i.second<<endl;
-    }
+    const int port = 2222;
+    
+    std::string s = "tcp://127.0.0.1:"+std::to_string(port);
+    cout<<s<<endl;
 }
