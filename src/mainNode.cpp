@@ -5,22 +5,28 @@
 #include <vector>
 #include <map>
 
-#include "makeTCP.hpp"
-#include "../include/create_processe.h"
+#include "../include/makeTCP.hpp"
+#include "../include/create_processe.hpp"
+#include "../include/split_string.hpp"
+
 
 using std::endl;
 using std::cout;
 using std::cin;
 
-const int PORT = 4040;
+int PORT = 49292;
 //один поток будет считывать с консоли и отправлять на обработку, а второй - принимать результат и выводить его в консоль
 
 //в управляющем узле будет один сокет PUB чтобы отсылать всем узлам запросы, а также сокет типа PULL в отдельном процессе для приёма срезультатов от выполняющих узлов
 
 void reading(){
+
     zmq::context_t ctx;
+
     zmq::socket_t reqPull(ctx, ZMQ_PULL);
+
     const std::string addrPull = makeTCP(PORT+1);
+
     reqPull.bind(addrPull);
 
     zmq::message_t answer;
@@ -30,7 +36,8 @@ void reading(){
         auto result = reqPull.recv(answer, zmq::recv_flags::dontwait);
     
         if(result.has_value() && result.value() > 0){
-            cout<<"полученный ответ от сервера: "<<*(answer.data<int>())<<endl;        
+
+            cout<< answer.to_string()<<endl;        
         } 
         
 
@@ -38,63 +45,73 @@ void reading(){
 }
 
 int main (){
+
     std::map<int, pid_t> nodes;
 
     zmq::context_t ctx;
     zmq::socket_t reqPub(ctx, ZMQ_PUB);
     
-    const std::string addrPush = makeTCP(PORT);
-    reqPub.bind(addrPush); 
+    const std::string addrPub = makeTCP(PORT);
+    reqPub.bind(addrPub); 
 
     std::thread newThread(reading);
 
     
     while(true){
-
-        std::string input;
-        std::getline(std::cin, input);
-        std::istringstream iss(input);
-        std::vector<std::string> words;
-        std::string word;
-        while (iss >> word) {
-            words.push_back(word);
-        }
         
+        std::string str;
+        std::getline(std::cin, str);
+        std::vector<std::string> words = split_string(str);
+        
+        int idNode = std::stoi(words[1]);
+        int idParent = std::stoi(words[2]);
+
         
         if(words[0] == "create"){
-            int idNode = std::stoi(words[1]);
-            int idParent = std::stoi(words[2]);
-            if(idParent == -1){
-                if(!nodes.find(idNode)){
-                    pid_t pidId = create_processe();
+            
+            if(!nodes.count(idNode)){
+
+                if(idParent == -1){
+
+                    pid_t pidId = 0;
+
+                    pidId = create_processe();
+
                     if(!pidId){
-                        execl("../build/jobNode", std::to_string(PORT), std::to_string(PORT+1), NULL);
+                        
+                        execl("../build/jobNode", &(std::to_string(PORT)[0]), &(std::to_string(PORT+1)[0]), &(std::to_string(idNode)[0]), NULL);
                         perror("Execl in child");
                         return -1;
                     }
+
                     nodes[idNode] = pidId;
+                    
+                    cout<<"Ok: "<<pidId<<endl;
+
+                    // continue;
                 }
-                continue;
+
+                else{
+                    
+                    zmq::message_t command(&str[0], str.size());
+                    reqPub.send(std::move(command), zmq::send_flags::none);
+                }
+
+                PORT += 4;
+
             }
-            // int idNode = std::stoi(words[1]);
-            // int idParent = std::stoi(words[2]);
-            // if(!nodes.find(idNode)){
-            //     for(auto i : nodes){
-            //         i.second
-            //     }
-            // }
-            // cout<<"Error: Already exists"<<endl;
+
+            else{
+
+                cout<<"Error: Already exists"<<endl;
+                // continue;
+            }
+            
         }
-        // else if(){
 
-        // }
-        // else{
+        else if(words[0] == "exec"){
 
-        // }
-        zmq::message_t msg(&value, sizeof(value));
-        reqPub.send(msg, zmq::send_flags::none);
-        cout<<"я клиент и я отправил число "<<value<<endl;  
- 
+        }
             
     }
 }

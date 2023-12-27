@@ -3,10 +3,10 @@
 build:clean-build clean-out
 	mkdir build
 	mkdir out
-	cd ./build; gcc ../src/main.c ../src/create_processe.c -o main;	gcc ../src/child.c ../src/create_processe.c -o child
+	cd ./build; c++ ../src/mainNode.cpp ../src/create_processe.cpp ../src/makeTCP.cpp ../src/split_string.cpp -lzmq -o mainNode;	c++ ../src/jobNode.cpp ../src/create_processe.cpp ../src/makeTCP.cpp ../src/split_string.cpp -lzmq -o jobNode
 
 run:
-	cd ./out; ../build/main
+	cd ./out; ../build/mainNode
 
 clean-build:
 	rm -rf ./build/
