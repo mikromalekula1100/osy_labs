@@ -14,9 +14,9 @@ using std::endl;
 using std::cout;
 using std::cin;
 
-const int PUB = 4510;
-const int PULL = 4511;
-int GPORT = 4512;
+const int PUB = 5510;
+const int PULL = 5511;
+int GPORT = 5512;
 //один поток будет считывать с консоли и отправлять на обработку, а второй - принимать результат и выводить его в консоль
 
 //в управляющем узле будет один сокет PUB чтобы отсылать всем узлам запросы, а также сокет типа PULL в отдельном процессе для приёма срезультатов от выполняющих узлов
@@ -66,11 +66,11 @@ int main (){
         std::vector<std::string> words = split_string(str);
         
         int idNode = std::stoi(words[1]);
-        int idParent = std::stoi(words[2]);
-
         
         if(words[0] == "create"){
-            
+
+            int idParent = std::stoi(words[2]);
+
             if(!nodes.count(idNode)){
 
                 if(idParent == -1){
@@ -114,6 +114,12 @@ int main (){
 
         else if(words[0] == "exec"){
             
+            //TO DO: Subcommand subcommand = Subcommand(idNode, words[2]);
+
+            zmq::message_t command(&str[0], str.size());
+
+            reqPub.send(std::move(command), zmq::send_flags::none);
+
         }
             
     }

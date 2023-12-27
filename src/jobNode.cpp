@@ -11,7 +11,10 @@
 #include "../include/create_processe.hpp"
 #include "../include/split_string.hpp"
 
+int idThisNode = 0;
+
 using std::endl;
+
 using std::cout;
 /*
  * Главный поток принимает сообщение от предыдущего узла-родителя через сокет SUB, в этом же потоке смотрит, является ли он исполнителем запроса:
@@ -21,35 +24,57 @@ using std::cout;
  * Также у меня есть третий процесс, который будет отвечать за прием сообщений от узлов-детей, он будет PULL, его задача слушать детей и отправлять результаты родителю, по идее этот поток можно убрать и делать те же действия в основном потоке, так как основной поток не выполняет долгую работу, нужно будет подумать над этим
 */
 
-// void calculate(zmq::context_t& ctx){
-//     zmq::socket_t socket(ctx, ZMQ_PAIR);
-//     socket.connect("inproc://calculate");
+void calculate(zmq::context_t& ctx){
 
-//     zmq::message_t request;
-//     while (true) {
+    zmq::socket_t socket(ctx, ZMQ_PAIR);
+
+    socket.connect("inproc://calculate");
+
+    zmq::message_t request;
+    
+
+std::chrono::time_point<std::chrono::high_resolution_clock> start = std::chrono::time_point<std::chrono::high_resolution_clock>::min();
+std::chrono::time_point<std::chrono::high_resolution_clock> stop = std::chrono::time_point<std::chrono::high_resolution_clock>::min();
+
+    while (true) {
         
-//         auto result = socket.recv(request, zmq::recv_flags::dontwait);
-//         if(result.has_value() && result.value() > 0){
-            
-//             int value = *(request.data<int>()); 
-//             value *= 2;
-//             cout<<"я вычислительный поток сервера и я принял число"<<value<<endl;
-//             sleep(2);
-//             zmq::message_t reply(&value, sizeof(value));
-//             socket.send(reply, zmq::send_flags::none);
-//             cout<<"я вычислительный поток и я отправил число"<< value<<endl;
-//         }
+        auto result = socket.recv(request, zmq::recv_flags::dontwait);
+        
+        if(result.has_value() && result.value() > 0){
+            sleep(5);
+            std::string subcommand = request.to_string();
+            std::string answer;
+            if(subcommand == "start"){
+
+                start = std::chrono::high_resolution_clock::now();
+                answer = "Ok:" + std::to_string(idThisNode);
+            }
+            else if(subcommand == "stop"){
+                
+                stop = std::chrono::high_resolution_clock::now();
+                answer = "Ok:"+  std::to_string(idThisNode);
+            }
+            else if(subcommand == "time"){
+
+                answer = "Ok:" + std::to_string(idThisNode) + ": " + std::to_string((std::chrono::duration_cast<std::chrono::milliseconds>(stop - start)).count());
+
+                
+            }
+
+            zmq::message_t msg(&answer[0], answer.size());
+            socket.send(std::move(msg), zmq::send_flags::none);
+        }
 
         
-//     }
-// }
+    }
+}
 
 int main(int argc, char* argv[]){
 
     const int PUB = std::stoi(argv[0]);
     const int SUB = std::stoi(argv[1]);
     int GPORT = std::stoi(argv[2]);
-    const int idThisNode = std::stoi(argv[3]);
+    idThisNode = std::stoi(argv[3]);
 
     const int thisPUB = GPORT;
     const int thisPULL = GPORT+1;
@@ -82,13 +107,15 @@ int main(int argc, char* argv[]){
     respondPull.bind(addrPull);
 
     //сокет для передачи команды о выполнении потоку исполнения
-    // zmq::socket_t socket(ctx, ZMQ_PAIR);
-    // socket.bind("inproc://calculate");
-    // std::thread newThread(calculate, std::ref(ctx));
+    zmq::socket_t socket(ctx, ZMQ_PAIR);
+    socket.bind("inproc://calculate");
+    std::thread newThread(calculate, std::ref(ctx));
 
     zmq::message_t command;
 
     zmq::message_t answerFromChild;
+
+    zmq::message_t answerFromCalculate;
 
     while(true){
 
@@ -102,10 +129,10 @@ int main(int argc, char* argv[]){
             std::vector<std::string> words = split_string(str);
 
             int idNode = std::stoi(words[1]);
+            std::string type_command = words[0];
+            if(type_command == "create"){
 
-            int idParent = std::stoi(words[2]);
-
-            if(words[0] == "create"){
+                int idParent = std::stoi(words[2]);
 
                 if(idParent == idThisNode){
                     
@@ -134,6 +161,24 @@ int main(int argc, char* argv[]){
                 respondPub.send(std::move(command), zmq::send_flags::none);
 
             }
+
+            else if(type_command == "exec"){
+
+                if(idNode == idThisNode){
+
+                    zmq::message_t msg(&((words[2])[0]), words[2].size());
+
+                    socket.send(std::move(msg), zmq::send_flags::none);
+                }
+
+                else{
+
+                    zmq::message_t command(&str[0], str.size());
+                    respondPub.send(std::move(command), zmq::send_flags::none);
+                }
+
+                
+            }
  
         }
 
@@ -145,6 +190,13 @@ int main(int argc, char* argv[]){
             respondPush.send(answerFromChild, zmq::send_flags::none);
         }
 
+
+        auto result3 = socket.recv(answerFromCalculate, zmq::recv_flags::dontwait);
+
+        if(result3.has_value() && result3.value() > 0){
+
+            respondPush.send(answerFromCalculate, zmq::send_flags::none);
+        }
            
             
         
