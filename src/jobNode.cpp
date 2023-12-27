@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <thread>
 #include <zmq.h>
-#include <map>
+#include <set>
 
 
 #include "../include/makeTCP.hpp"
@@ -45,13 +45,11 @@ using std::cout;
 // }
 
 int main(int argc, char* argv[]){
-
+    ште
     const int portIn = std::stoi(argv[0]);
     const int portOut = std::stoi(argv[1]);
     const int idThisNode = std::stoi(argv[2]);
     cout<<idThisNode<<endl;
-
-    std::map<int, pid_t> nodes;
 
     zmq::context_t ctx;
 
@@ -77,12 +75,12 @@ int main(int argc, char* argv[]){
     respondPush.connect(addrPush);
 
     //сокет для передачи команды о выполнении потоку исполнения
-    zmq::socket_t socket(ctx, ZMQ_PAIR);
-    socket.bind("inproc://calculate");
+    // zmq::socket_t socket(ctx, ZMQ_PAIR);
+    // socket.bind("inproc://calculate");
     // std::thread newThread(calculate, std::ref(ctx));
 
     zmq::message_t command;
-   
+    zmq::message_t answerFromChild;
     while(true){
       
         auto result = respondSub.recv(command, zmq::recv_flags::dontwait);
@@ -90,8 +88,6 @@ int main(int argc, char* argv[]){
         if(result.has_value() && result.value() > 0){
             
             std::string str = command.to_string();
-
-            cout<<"я исполнитель номер "<< idThisNode<<" "<<str<<endl;
 
             std::vector<std::string> words = split_string(str);
 
@@ -113,39 +109,33 @@ int main(int argc, char* argv[]){
                         return -1;
                     }
 
-                    nodes[idNode] = pidId;
+                    
 
-                    std::string str = "Ok: " + std::to_string(pidId)+ " " + std::to_string(getpid());
+                    std::string str = "Ok: " + std::to_string(pidId);
 
                     zmq::message_t answer(&str[0], str.size());
 
-                    respondPush.send(answer, zmq::send_flags::none);
+                    respondPush.send(std::move(answer), zmq::send_flags::none);
 
-                    // continue;
                 }
 
                 else{
-                    // cout<<"я процесс ="<<idThisNode<< "порт для связи со мной = "<<portOut + 2<< "порт в который я пишу = "<<portOut + 1<<"порт, который я слушаю ="<<portIn<<"порт, по которому я отправляю результат ="<<portOut<<endl;
-
+                    
                     zmq::message_t command(&str[0], str.size());
                     respondPub.send(std::move(command), zmq::send_flags::none);
                 }
 
             }
-
-            // zmq::message_t to_send(&receivedValue, sizeof(receivedValue));
-
-            // socket.send(to_send, zmq::send_flags::none); 
+ 
         }
 
-        
-                      
-    //     auto result2 = socket.recv(answer, zmq::recv_flags::dontwait);
 
-    //     if(result2.has_value() && result2.value() > 0){
+        auto result2 = respondPull.recv(answerFromChild, zmq::recv_flags::dontwait);
 
-    //         respondPush.send(std::move(answer), zmq::send_flags::none);
-    //     }
+        if(result2.has_value() && result2.value() > 0){
+
+            respondPush.send(answerFromChild, zmq::send_flags::none);
+        }
 
            
             

@@ -3,7 +3,7 @@
 #include "zmq.hpp"
 #include <thread>
 #include <vector>
-#include <map>
+#include <set>
 
 #include "../include/makeTCP.hpp"
 #include "../include/create_processe.hpp"
@@ -14,7 +14,7 @@ using std::endl;
 using std::cout;
 using std::cin;
 
-int PORT = 49292;
+int PORT = 6040;
 //один поток будет считывать с консоли и отправлять на обработку, а второй - принимать результат и выводить его в консоль
 
 //в управляющем узле будет один сокет PUB чтобы отсылать всем узлам запросы, а также сокет типа PULL в отдельном процессе для приёма срезультатов от выполняющих узлов
@@ -46,7 +46,7 @@ void reading(){
 
 int main (){
 
-    std::map<int, pid_t> nodes;
+    std::set<int> nodes;
 
     zmq::context_t ctx;
     zmq::socket_t reqPub(ctx, ZMQ_PUB);
@@ -84,11 +84,10 @@ int main (){
                         return -1;
                     }
 
-                    nodes[idNode] = pidId;
+                    
                     
                     cout<<"Ok: "<<pidId<<endl;
 
-                    // continue;
                 }
 
                 else{
@@ -97,14 +96,15 @@ int main (){
                     reqPub.send(std::move(command), zmq::send_flags::none);
                 }
 
+                nodes.insert(idNode);
                 PORT += 4;
+                
 
             }
 
             else{
 
                 cout<<"Error: Already exists"<<endl;
-                // continue;
             }
             
         }
