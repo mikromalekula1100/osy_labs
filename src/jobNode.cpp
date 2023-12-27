@@ -45,34 +45,41 @@ using std::cout;
 // }
 
 int main(int argc, char* argv[]){
-    ште
-    const int portIn = std::stoi(argv[0]);
-    const int portOut = std::stoi(argv[1]);
-    const int idThisNode = std::stoi(argv[2]);
+
+    const int PUB = std::stoi(argv[0]);
+    const int SUB = std::stoi(argv[1]);
+    int GPORT = std::stoi(argv[2]);
+    const int idThisNode = std::stoi(argv[3]);
+
+    const int thisPUB = GPORT;
+    const int thisPULL = GPORT+1;
+
+    GPORT += 2;
+
     cout<<idThisNode<<endl;
 
     zmq::context_t ctx;
 
     //сокет для приёма сообщений от родителя
     zmq::socket_t respondSub(ctx, ZMQ_SUB);
-    const std::string addrSub = makeTCP(portIn);
+    const std::string addrSub = makeTCP(PUB);
     respondSub.connect(addrSub);
     respondSub.set(zmq::sockopt::subscribe, "");
 
+    //сокет для отправки результата родиxтелю
+    zmq::socket_t respondPush(ctx, ZMQ_PUSH); 
+    const std::string addrPush = makeTCP(SUB);    
+    respondPush.connect(addrPush);
+
     //сокет для отправки сообщений детям
     zmq::socket_t respondPub(ctx, ZMQ_PUB);  
-    const std::string addrPub = makeTCP(portOut + 1);
+    const std::string addrPub = makeTCP(thisPUB);
     respondPub.bind(addrPub);
 
     //сокет для принятия сообщений от детей
     zmq::socket_t respondPull(ctx, ZMQ_PULL);
-    const std::string addrPull = makeTCP(portOut + 2);
+    const std::string addrPull = makeTCP(thisPULL);
     respondPull.bind(addrPull);
-
-    //сокет для отправки результата родиxтелю
-    zmq::socket_t respondPush(ctx, ZMQ_PUSH); 
-    const std::string addrPush = makeTCP(portOut);    
-    respondPush.connect(addrPush);
 
     //сокет для передачи команды о выполнении потоку исполнения
     // zmq::socket_t socket(ctx, ZMQ_PAIR);
@@ -80,8 +87,11 @@ int main(int argc, char* argv[]){
     // std::thread newThread(calculate, std::ref(ctx));
 
     zmq::message_t command;
+
     zmq::message_t answerFromChild;
+
     while(true){
+
       
         auto result = respondSub.recv(command, zmq::recv_flags::dontwait);
 
@@ -92,6 +102,7 @@ int main(int argc, char* argv[]){
             std::vector<std::string> words = split_string(str);
 
             int idNode = std::stoi(words[1]);
+
             int idParent = std::stoi(words[2]);
 
             if(words[0] == "create"){
@@ -104,12 +115,10 @@ int main(int argc, char* argv[]){
 
                     if(!pidId){
                         
-                        execl("../build/jobNode", &(std::to_string(portOut + 1)[0]), &(std::to_string(portOut + 2)[0]), &(std::to_string(idNode)[0]), NULL);
+                        execl("../build/jobNode", &(std::to_string(thisPUB)[0]), &(std::to_string(thisPULL)[0]), &(std::to_string(GPORT)[0]), &(std::to_string(idNode)[0]), NULL);
                         perror("Execl in child");
                         return -1;
                     }
-
-                    
 
                     std::string str = "Ok: " + std::to_string(pidId);
 
@@ -117,13 +126,12 @@ int main(int argc, char* argv[]){
 
                     respondPush.send(std::move(answer), zmq::send_flags::none);
 
-                }
-
-                else{
                     
-                    zmq::message_t command(&str[0], str.size());
-                    respondPub.send(std::move(command), zmq::send_flags::none);
                 }
+                
+                GPORT += 2;
+                zmq::message_t command(&str[0], str.size());
+                respondPub.send(std::move(command), zmq::send_flags::none);
 
             }
  
