@@ -17,12 +17,15 @@ using std::endl;
 using std::cout;
 using std::cin;
 
-const int PUB = 5510;
-const int PULL = 5511;
-int GPORT = 5612;
+const int PUB = 4440;
+const int PULL = 4441;
+int GPORT = 4442;
+
+std::mutex mtx;
 
 std::set<int> nodes;
 
+int nodeForCheck = 0;
 
 auto start = std::chrono::high_resolution_clock::now();
 
@@ -52,11 +55,11 @@ void reading(){
     
         if(result.has_value() && result.value() > 0){
             
-            std::string str = answer.to_string();         
-            cout<<str<<endl;
+            std::string str = answer.to_string();   
+
             std::vector<std::string> words = split_string(str);
 
-            if(flagToHeartbit){
+            if(flagToHeartbit){ 
 
                 stop = std::chrono::high_resolution_clock::now();
 
@@ -97,18 +100,27 @@ void reading(){
 
             }
 
+            else if(words[0] == "check"){
+                cout<<words[1]<<endl;
+                nodeForCheck = std::stoi(words[1]);
+                mtx.unlock();
+            }
+
+
             else{
                 
-                cout<<2222222222<< answer.to_string()<<2222222222<<endl;  
+                cout<<answer.to_string()<<endl;  
             }
-        
-                
                   
         } 
         
 
     }
 }
+
+
+
+
 
 int main (){
 
@@ -140,11 +152,18 @@ int main (){
 
             if(!nodes.count(idNode)){
 
+                std::string check  = "check " + words[2];
+
+                zmq::message_t msgCheck(&check[0], check.size());
+
+                reqPub.send(std::move(msgCheck), zmq::send_flags::none);
+
                 if(idParent == -1){
 
                     pid_t pidId = 0;
 
                     pidId = create_processe();
+
                     if(!pidId){
                         
                         execl("../build/jobNode", &(std::to_string(PUB)[0]), &(std::to_string(PULL)[0]),&(std::to_string(GPORT)[0]), &(std::to_string(idNode)[0]), NULL);
@@ -152,57 +171,104 @@ int main (){
                         return -1;
                     }
 
-                    cout<<"Ok44: "<<pidId<<endl;
+                    cout<<"Ok: "<<pidId<<endl;
 
                 }
 
                 else if(!nodes.count(idParent)){
                     
-                    cout<<"Error: Parent not found"<<endl;
+                    cout<<"Error:"<<idParent<<" not found"<<endl;
                     continue;
                 
                 }
 
-                zmq::message_t command(&str[0], str.size());
+                else{
+                    cout<<2222<<endl;
+                    mtx.lock();
+                    cout<<333<<endl;
+                    
+                }
 
-                reqPub.send(std::move(command), zmq::send_flags::none);
+                if((idParent == -1) || words[2] == std::to_string(nodeForCheck)){
 
-                nodes.insert(idNode);
+                    zmq::message_t command(&str[0], str.size());
+
+                    reqPub.send(std::move(command), zmq::send_flags::none);
+
+                    nodes.insert(idNode);
+                    
+                    GPORT += 2;
+                }
+
+                else{
+
+                    cout<<"Error:"<<idParent<<" is unavailable"<<endl;
+                }
+
                 
-                GPORT += 2;
             }
 
-            // else{
+            else{
 
-            //     cout<<"Error: Already exists"<<endl;
-            // }
+                cout<<"Error: Already exists"<<endl;
+            }
             
         }
 
-        // else if(type_command == "exec"){
+        //TO DO: Subcommand subcommand = Subcommand(idNode, words[2]);
+        else if(type_command == "exec"){
             
-        //     //TO DO: Subcommand subcommand = Subcommand(idNode, words[2]);
+            std::string check  = "check " + words[1];
 
-        //     zmq::message_t command(&str[0], str.size());
+            zmq::message_t msgCheck(&check[0], check.size());
+            
+            reqPub.send(std::move(msgCheck), zmq::send_flags::none);
 
-        //     reqPub.send(std::move(command), zmq::send_flags::none);
+            mtx.lock();
 
-        // }
+            if(!nodes.count(idNode)){
 
-        // else if(type_command == "hearbit"){
+                if(words[1] == std::to_string(nodeForCheck)){
 
-        //     if(idNode == -1){
+                    zmq::message_t command(&str[0], str.size());
 
-        //         flagToHeartbit = false;
-        //     }
-        //     else{
+                    reqPub.send(std::move(command), zmq::send_flags::none);
+                }
 
-        //         myTime = idNode;
-        //         flagToHeartbit = true;
-        //     }
+                else{
 
-        //     start = std::chrono::high_resolution_clock::now();
-        // }
+                    cout<<"Error: "<<words[1]<< " : Node is unavailable"<<endl;
+                }
+                    
+            }
+            
+            else{
+
+                cout<<"Error:"<<words[1]<<" : Not found"<<endl;
+            }
+
+        }
+
+        else if(type_command == "heartbit"){
+            
+            if(idNode == -1){
+
+                flagToHeartbit = false;
+            }
+
+            else{
+            
+                myTime = idNode;
+
+                flagToHeartbit = true;
+            }
+
+            zmq::message_t command(&str[0], str.size());
+
+            reqPub.send(std::move(command), zmq::send_flags::none);
+
+            start = std::chrono::high_resolution_clock::now();
+        }
             
     }
 }
