@@ -51,9 +51,9 @@ void reading(){
         auto result = reqPull.recv(answer, zmq::recv_flags::dontwait);
     
         if(result.has_value() && result.value() > 0){
-
+            
             std::string str = answer.to_string();         
-
+            cout<<str<<endl;
             std::vector<std::string> words = split_string(str);
 
             if(flagToHeartbit){
@@ -94,8 +94,6 @@ void reading(){
 
                     cout<< answer.to_string()<<endl;  
                 }
-
-                cout<<1111111<<endl;
 
             }
 
@@ -147,7 +145,6 @@ int main (){
                     pid_t pidId = 0;
 
                     pidId = create_processe();
-
                     if(!pidId){
                         
                         execl("../build/jobNode", &(std::to_string(PUB)[0]), &(std::to_string(PULL)[0]),&(std::to_string(GPORT)[0]), &(std::to_string(idNode)[0]), NULL);
@@ -155,7 +152,7 @@ int main (){
                         return -1;
                     }
 
-                    cout<<"Ok: "<<pidId<<endl;
+                    cout<<"Ok44: "<<pidId<<endl;
 
                 }
 

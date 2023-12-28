@@ -13,6 +13,9 @@
 
 int idThisNode = 0;
 
+using std::endl;
+using std::cout;
+using std::cin;
 
 /*
  * Главный поток принимает сообщение от предыдущего узла-родителя через сокет SUB, в этом же потоке смотрит, является ли он исполнителем запроса:
@@ -197,10 +200,10 @@ int main(int argc, char* argv[]){
             
                 int idParent = std::stoi(words[2]);
 
-                cout<<idParent<<" "<<idThisNode<<endl;
                 
                 if(idParent == idThisNode){
                     
+                    cout<<"kekekekekeek"<<endl;
                     pid_t pidId = 0;
 
                     pidId = create_processe();
@@ -221,9 +224,9 @@ int main(int argc, char* argv[]){
                     
                 }
                 
-                GPORT += 2;
-                zmq::message_t command(&str[0], str.size());
-                respondPub.send(std::move(command), zmq::send_flags::none);
+                // GPORT += 2;
+                // zmq::message_t command(&str[0], str.size());
+                // respondPub.send(std::move(command), zmq::send_flags::none);
 
             }
 
@@ -254,12 +257,12 @@ int main(int argc, char* argv[]){
         }
 
 
-        auto result2 = respondPull.recv(answerFromChild, zmq::recv_flags::dontwait);
+        // auto result2 = respondPull.recv(answerFromChild, zmq::recv_flags::dontwait);
 
-        if(result2.has_value() && result2.value() > 0){
+        // if(result2.has_value() && result2.value() > 0){
 
-            respondPush.send(answerFromChild, zmq::send_flags::none);
-        }
+        //     respondPush.send(answerFromChild, zmq::send_flags::none);
+        // }
 
 
         // auto result3 = socketCalculate.recv(answerFromCalculate, zmq::recv_flags::dontwait);
