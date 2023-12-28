@@ -127,11 +127,15 @@ int main (){
     while(true){
         
         std::string str;
+
         std::getline(std::cin, str);
+
         std::vector<std::string> words = split_string(str);
         
         int idNode = std::stoi(words[1]);
+
         std::string type_command = words[0];
+
         if(type_command == "create"){
 
             int idParent = std::stoi(words[2]);
@@ -154,6 +158,7 @@ int main (){
                     cout<<"Ok: "<<pidId<<endl;
 
                 }
+
                 else if(!nodes.count(idParent)){
                     
                     cout<<"Error: Parent not found"<<endl;
@@ -170,37 +175,37 @@ int main (){
                 GPORT += 2;
             }
 
-            else{
+            // else{
 
-                cout<<"Error: Already exists"<<endl;
-            }
+            //     cout<<"Error: Already exists"<<endl;
+            // }
             
         }
 
-        else if(type_command == "exec"){
+        // else if(type_command == "exec"){
             
-            //TO DO: Subcommand subcommand = Subcommand(idNode, words[2]);
+        //     //TO DO: Subcommand subcommand = Subcommand(idNode, words[2]);
 
-            zmq::message_t command(&str[0], str.size());
+        //     zmq::message_t command(&str[0], str.size());
 
-            reqPub.send(std::move(command), zmq::send_flags::none);
+        //     reqPub.send(std::move(command), zmq::send_flags::none);
 
-        }
+        // }
 
-        else if(type_command == "hearbit"){
+        // else if(type_command == "hearbit"){
 
-            if(idNode == -1){
+        //     if(idNode == -1){
 
-                flagToHeartbit = false;
-            }
-            else{
+        //         flagToHeartbit = false;
+        //     }
+        //     else{
 
-                myTime = idNode;
-                flagToHeartbit = true;
-            }
+        //         myTime = idNode;
+        //         flagToHeartbit = true;
+        //     }
 
-            start = std::chrono::high_resolution_clock::now();
-        }
+        //     start = std::chrono::high_resolution_clock::now();
+        // }
             
     }
 }
