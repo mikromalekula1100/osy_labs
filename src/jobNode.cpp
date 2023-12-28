@@ -209,7 +209,7 @@ int main(int argc, char* argv[]){
                         return -1;
                     }
 
-                    // std::string str = "Ok1: " + std::to_string(pidId);
+                    std::string str = "Ok1: " + std::to_string(pidId);
 
                     zmq::message_t answer(&str[0], str.size());
 
