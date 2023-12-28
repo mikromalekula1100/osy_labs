@@ -9,6 +9,9 @@
 #include "../include/create_processe.hpp"
 #include "../include/split_string.hpp"
 
+//один поток будет считывать с консоли и отправлять на обработку, а второй - принимать результат и выводить его в консоль
+
+//в управляющем узле будет один сокет PUB чтобы отсылать всем узлам запросы, а также сокет типа PULL в отдельном процессе для приёма срезультатов от выполняющих узлов
 
 using std::endl;
 using std::cout;
@@ -16,13 +19,23 @@ using std::cin;
 
 const int PUB = 5510;
 const int PULL = 5511;
-int GPORT = 5512;
-//один поток будет считывать с консоли и отправлять на обработку, а второй - принимать результат и выводить его в консоль
+int GPORT = 5612;
 
-//в управляющем узле будет один сокет PUB чтобы отсылать всем узлам запросы, а также сокет типа PULL в отдельном процессе для приёма срезультатов от выполняющих узлов
+std::set<int> nodes;
+
+
+auto start = std::chrono::high_resolution_clock::now();
+
+auto stop = start;
+
+int64_t myTime = 1;
+
+bool flagToHeartbit = false;
 
 void reading(){
 
+    std::set<int> survivingNodes;
+    
     zmq::context_t ctx;
 
     zmq::socket_t reqPull(ctx, ZMQ_PULL);
@@ -34,12 +47,63 @@ void reading(){
     zmq::message_t answer;
 
     while(true){
-       
+
         auto result = reqPull.recv(answer, zmq::recv_flags::dontwait);
     
         if(result.has_value() && result.value() > 0){
 
-            cout<< answer.to_string()<<endl;        
+            std::string str = answer.to_string();         
+
+            std::vector<std::string> words = split_string(str);
+
+            if(flagToHeartbit){
+
+                stop = std::chrono::high_resolution_clock::now();
+
+                if(myTime*4 <= (std::chrono::duration_cast<std::chrono::milliseconds>(stop - start)).count() && words[0] == "heartbit"){
+                    
+                    bool f = 1;
+
+                    for(int i : nodes){
+
+                            if(survivingNodes.count(i) == 0){
+
+                                cout<<"Heartbit: "<<i<<" is unavailable now"<<endl;
+                                f = 0;
+                            }
+                        }
+
+                        if(f){
+                            cout<<"OK"<<endl;
+                        }
+
+                        survivingNodes.clear();
+
+                        start = std::chrono::high_resolution_clock::now();
+                }
+
+                else if(words[0] == "heartbit"){
+
+                    int node = std::stoi(words[1]);
+
+                    survivingNodes.insert(node);
+                    
+                }
+                
+                else{
+
+                    cout<< answer.to_string()<<endl;  
+                }
+
+            }
+
+            else{
+
+                cout<< answer.to_string()<<endl;  
+            }
+        
+                
+                  
         } 
         
 
@@ -48,7 +112,6 @@ void reading(){
 
 int main (){
 
-    std::set<int> nodes;
 
     zmq::context_t ctx;
     zmq::socket_t reqPub(ctx, ZMQ_PUB);
@@ -66,8 +129,8 @@ int main (){
         std::vector<std::string> words = split_string(str);
         
         int idNode = std::stoi(words[1]);
-        
-        if(words[0] == "create"){
+        std::string type_command = words[0];
+        if(type_command == "create"){
 
             int idParent = std::stoi(words[2]);
 
@@ -112,7 +175,7 @@ int main (){
             
         }
 
-        else if(words[0] == "exec"){
+        else if(type_command == "exec"){
             
             //TO DO: Subcommand subcommand = Subcommand(idNode, words[2]);
 
@@ -120,6 +183,21 @@ int main (){
 
             reqPub.send(std::move(command), zmq::send_flags::none);
 
+        }
+
+        else if(type_command == "hearbit"){
+
+            if(idNode == -1){
+
+                flagToHeartbit = false;
+            }
+            else{
+
+                myTime = idNode;
+                flagToHeartbit = true;
+            }
+
+            start = std::chrono::high_resolution_clock::now();
         }
             
     }
