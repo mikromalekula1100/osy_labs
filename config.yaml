@@ -11,5 +11,3 @@ nodes:
   depends_on: [6]
 - id: 6
   depends_on: []
-# - id: 7
-#   depends_on: []

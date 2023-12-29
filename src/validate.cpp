@@ -45,8 +45,6 @@ bool hasCycle(std::vector<std::vector<int>>& dag){
 }
 
 
-
-
 void dfs(int v, std::vector<int>& visited, std::vector<std::vector<int>>& adj) {
     visited[v] = true;
     for (auto u : adj[v])
@@ -78,23 +76,61 @@ int findWeaklyConnectedComponents(std::vector<std::vector<int>>& dag, std::vecto
     return components;
 }
 
+std::vector<int> findStartNodes(std::vector<std::vector<int>>& dag){
 
-
-void findStartEndNodes(std::vector<std::vector<int>>& dag) {
+    std::vector<int> startNodes;
 
     int n = dag.size();
-    std::vector<int> in(n, 0), out(n, 0);
 
-    for (int i = 0; i < n; ++i)
+    std::vector<int> in(n, 0);
+
+    for(int i = 0; i < n; ++i){
+
         for (auto u : dag[i]) {
-            ++out[i];
+
             ++in[u];
         }
+    }
 
     for (int i = 0; i < n; ++i) {
-        if (in[i] == 0)
-            std::cout << "Start node: " << i + 1 << std::endl;
-        if (out[i] == 0)
-            std::cout << "End node: " << i + 1 << std::endl;
-    }
+
+        if (in[i] == 0){
+
+            startNodes.push_back(i + 1);
+        }
+        
+            
+    }  
+
+    return startNodes;
 }
+
+std::vector<int> findEndNodes(std::vector<std::vector<int>>& dag){
+
+    std::vector<int> endNodes;
+
+    int n = dag.size();
+
+    std::vector<int> out(n, 0);
+
+    for(int i = 0; i < n; ++i){
+
+        for (auto u : dag[i]) {
+
+            ++out[i];
+        }
+    }
+
+    for (int i = 0; i < n; ++i) {
+
+        if (out[i] == 0){
+
+            endNodes.push_back(i + 1);
+        }
+        
+            
+    }
+
+    return endNodes;
+}
+

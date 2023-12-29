@@ -3,7 +3,7 @@
 build:clean-build clean-out
 	mkdir build
 	mkdir out
-	cd ./build; c++  ../src/main.cpp ../src/readDag.cpp ../src/validate.cpp  -o main -lyaml-cpp
+	cd ./build; c++ -std=c++20 ../src/main.cpp ../src/readDag.cpp ../src/validate.cpp  -o main -lyaml-cpp
 
 run:
 	cd ./out; ../build/main

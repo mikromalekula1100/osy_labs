@@ -6,4 +6,5 @@
 #include <vector>
 #include <set>
 
+
 void readDag(std::string, std::vector<std::vector<int>>&);
