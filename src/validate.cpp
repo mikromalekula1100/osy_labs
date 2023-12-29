@@ -1,11 +1,8 @@
 #include "../include/validate.hpp"
 
-std::vector<std::vector<int>> dag;
 
-//нахождение компонент связности
-std::vector<std::vector<int>> adj;
 
-bool dfsC(int vertex, std::vector<int>& visited){
+bool dfsC(int vertex, std::vector<int>& visited, std::vector<std::vector<int>>& dag){
 
     visited[vertex] = 1;
 
@@ -13,7 +10,7 @@ bool dfsC(int vertex, std::vector<int>& visited){
 
         if(visited[to] == 0){
 
-            if(dfsC(to, visited)){
+            if(dfsC(to, visited, dag)){
 
                 return true;
             }
@@ -28,7 +25,7 @@ bool dfsC(int vertex, std::vector<int>& visited){
     return false;
 }
 
-bool hasCycle(){
+bool hasCycle(std::vector<std::vector<int>>& dag){
 
     std::vector<int> visited(dag.size(), 0);
 
@@ -36,7 +33,7 @@ bool hasCycle(){
 
         if(!visited[vertex]){
 
-            if(dfsC(vertex, visited)){
+            if(dfsC(vertex, visited, dag)){
 
                 return true;
             }
@@ -47,19 +44,17 @@ bool hasCycle(){
     return false;
 }
 
-//--------------------
-
-//нахождение компонент связности
 
 
-void dfs(int v, std::vector<int>& visited) {
+
+void dfs(int v, std::vector<int>& visited, std::vector<std::vector<int>>& adj) {
     visited[v] = true;
     for (auto u : adj[v])
         if (!visited[u])
-            dfs(u, visited);
+            dfs(u, visited, adj);
 }
 
-int findWeaklyConnectedComponents() {
+int findWeaklyConnectedComponents(std::vector<std::vector<int>>& dag, std::vector<std::vector<int>>& adj) {
 
     std::vector<int> visited(dag.size(), 0);
 
@@ -76,38 +71,16 @@ int findWeaklyConnectedComponents() {
     int components = 0;
     for (int i = 0; i < n; ++i)
         if (!visited[i]) {
-            dfs(i, visited);
+            dfs(i, visited, adj);
             ++components;
         }
 
     return components;
 }
 
-void readDag(std::string fileName){
 
-    YAML::Node config = YAML::LoadFile(fileName);
 
-    const auto& values = config["nodes"];
-
-    for(const auto& i : values){
-
-       int idNode = i["id"].as<int>() - 1;
-
-       std::vector<int> vectorDepends = i["depends_on"].as<std::vector<int>>(); 
-
-       std::vector<int> list;
-
-       for(int i : vectorDepends){
-
-           list.push_back(i - 1);
-       }
-
-       dag.push_back(list);
-    }
-
-}
-
-void findStartEndNodes() {
+void findStartEndNodes(std::vector<std::vector<int>>& dag) {
 
     int n = dag.size();
     std::vector<int> in(n, 0), out(n, 0);

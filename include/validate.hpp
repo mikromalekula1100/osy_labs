@@ -9,17 +9,17 @@
 using std::cout;
 using std::endl;
 
-bool dfsC(int, std::vector<int>&);
+bool dfsC(int, std::vector<int>&, std::vector<std::vector<int>>&);
 
-bool hasCycle();
+bool hasCycle(std::vector<std::vector<int>>&);
 
 
-void dfs(int, std::vector<int>&);
+void dfs(int, std::vector<int>&, std::vector<std::vector<int>>& );
 
-int findWeaklyConnectedComponents();
+int findWeaklyConnectedComponents(std::vector<std::vector<int>>&, std::vector<std::vector<int>>& );
 
 //--------------------
 
-void readDag(std::string);
 
-void findStartEndNodes();
+
+void findStartEndNodes(std::vector<std::vector<int>>&);
