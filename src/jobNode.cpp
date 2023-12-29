@@ -49,11 +49,8 @@ void heartbit(zmq::context_t& ctx){
 
         if(result.has_value() && result.value() > 0){
 
-            
-
             value = std::stoi(request.to_string());
-
-
+            
             if(value == -1){
 
                 flag = false;

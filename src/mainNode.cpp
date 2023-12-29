@@ -17,11 +17,10 @@ using std::endl;
 using std::cout;
 using std::cin;
 
-const int PUB = 4440;
-const int PULL = 4441;
-int GPORT = 4442;
+const int PUB = 4740;
+const int PULL = 4741;
+int GPORT = 4742;
 
-std::mutex mtx;
 
 std::set<int> nodes;
 
@@ -50,6 +49,7 @@ void reading(){
     zmq::message_t answer;
 
     while(true){
+
 
         auto result = reqPull.recv(answer, zmq::recv_flags::dontwait);
     
@@ -101,9 +101,8 @@ void reading(){
             }
 
             else if(words[0] == "check"){
-                cout<<words[1]<<endl;
+        
                 nodeForCheck = std::stoi(words[1]);
-                mtx.unlock();
             }
 
 
@@ -182,12 +181,7 @@ int main (){
                 
                 }
 
-                else{
-                    cout<<2222<<endl;
-                    mtx.lock();
-                    cout<<333<<endl;
-                    
-                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
                 if((idParent == -1) || words[2] == std::to_string(nodeForCheck)){
 
@@ -215,7 +209,6 @@ int main (){
             
         }
 
-        //TO DO: Subcommand subcommand = Subcommand(idNode, words[2]);
         else if(type_command == "exec"){
             
             std::string check  = "check " + words[1];
@@ -224,9 +217,9 @@ int main (){
             
             reqPub.send(std::move(msgCheck), zmq::send_flags::none);
 
-            mtx.lock();
+            std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
-            if(!nodes.count(idNode)){
+            if(nodes.count(idNode)){
 
                 if(words[1] == std::to_string(nodeForCheck)){
 
@@ -237,14 +230,14 @@ int main (){
 
                 else{
 
-                    cout<<"Error: "<<words[1]<< " : Node is unavailable"<<endl;
+                    cout<<"Error:"<<words[1]<< ": Node is unavailable"<<endl;
                 }
                     
             }
             
             else{
 
-                cout<<"Error:"<<words[1]<<" : Not found"<<endl;
+                cout<<"Error:"<<words[1]<<": Not found"<<endl;
             }
 
         }
